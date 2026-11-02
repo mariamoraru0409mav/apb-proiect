@@ -1,0 +1,82 @@
+Run run_430c0f2062136399: project B, suite public, business date 2026-11-16, 12 scenario(s).
+BASE_URL = https://apb.majordom.tech/r/dKZ6i46651cIinoOZFlTIA
+$ /usr/bin/python3 solutie.py
+ONB-878710 | COMPLETED |
+ONB-422848 | REJECTED | START_DATE_IN_PAST
+ONB-814845 | COMPLETED |
+ONB-468807 | COMPLETED |
+ONB-587677 | REJECTED | INVALID_REQUEST
+ONB-760507 | REJECTED | START_DATE_IN_PAST,MANAGER_INACTIVE
+Retry POST /directory/accounts: HTTP 500, attempt 2/3, waiting 1s
+Retry POST /directory/accounts: HTTP 500, attempt 3/3, waiting 1s
+ONB-801540 | PARTIAL | ACCOUNT_FAILED
+Retry POST /access/grants: HTTP 500, attempt 2/3, waiting 1s
+Retry POST /access/grants: HTTP 500, attempt 3/3, waiting 1s
+ONB-449893 | PARTIAL | ACCESS_FAILED
+ONB-711657 | REJECTED | INVALID_REQUEST
+ONB-184068 | MANUAL_REVIEW | MANAGER_MISSING
+ONB-191855 | REJECTED | UNKNOWN_ROLE
+ONB-368274 | MANUAL_REVIEW | ALREADY_EMPLOYED
+ONB-390077 | COMPLETED |
+Retry POST /directory/accounts: HTTP 503, attempt 2/3, waiting 1s
+Retry POST /access/grants: 429 RATE_LIMITED, waiting 1s
+ONB-560343 | COMPLETED |
+ONB-564864 | COMPLETED |
+ONB-737125 | MANUAL_REVIEW | SOD_CONFLICT
+ONB-854948 | COMPLETED |
+ONB-445421 | COMPLETED |
+ONB-621338 | REJECTED | UNKNOWN_ROLE,MANAGER_MISSING
+ONB-630363 | COMPLETED |
+ONB-666493 | REJECTED | UNKNOWN_DEPARTMENT
+ONB-756735 | COMPLETED |
+ONB-827681 | MANUAL_REVIEW | MANAGER_MISSING
+ONB-256692 | REJECTED | INVALID_CNP
+Retry POST /lms/enrollments: HTTP 500, attempt 2/3, waiting 1s
+Retry POST /lms/enrollments: HTTP 500, attempt 3/3, waiting 1s
+ONB-705445 | PARTIAL | TRAINING_FAILED
+ONB-926392 | REJECTED | INVALID_CNP,UNKNOWN_DEPARTMENT
+ONB-736810 | REJECTED | UNDERAGE
+ONB-407351 | COMPLETED |
+ONB-700495 | COMPLETED |
+Retry GET /requests/ONB-808228: HTTP 503, attempt 2/3, waiting 1s
+Retry POST /lms/enrollments: HTTP 500, attempt 2/3, waiting 1s
+Retry POST /notifications: HTTP 503, attempt 2/3, waiting 1s
+ONB-808228 | COMPLETED |
+ONB-345639 | COMPLETED |
+ONB-345772 | MANUAL_REVIEW | MANAGER_INACTIVE
+ONB-497095 | COMPLETED |
+ONB-595048 | MANUAL_REVIEW | ROLE_NOT_IN_DEPARTMENT
+ONB-675675 | COMPLETED | MEETING_NOT_SCHEDULED
+ONB-884869 | COMPLETED |
+ONB-188721 | MANUAL_REVIEW | MINOR_EMPLOYEE,SOD_CONFLICT
+ONB-191382 | COMPLETED |
+ONB-639710 | COMPLETED |
+Retry POST /calendar/meetings: HTTP 500, attempt 2/3, waiting 1s
+Retry POST /calendar/meetings: HTTP 500, attempt 3/3, waiting 1s
+ONB-746239 | PARTIAL | MEETING_FAILED
+ONB-237144 | REJECTED | INVALID_REQUEST
+ONB-360480 | MANUAL_REVIEW | MINOR_EMPLOYEE
+ONB-445280 | COMPLETED |
+The solution exited with code 0 after 103.7s.
+Run run_430c0f2062136399  project B  suite public  seed 1  business date 2026-11-16
+TOTAL 12.00 / 12.00  (100.0%)
+
+Category           Score     Max  Scenarios
+rules               7.00    7.00          7
+combined            1.00    1.00          1
+variations          1.00    1.00          1
+robustness          3.00    3.00          3
+
+Scenario  Category           Score     Max  Title
+B-P01     rules               1.00    1.00  Two complete onboardings, one with a username that is already taken
+B-P02     rules               1.00    1.00  Malformed requests, an invalid CNP and the age limits
+B-P03     rules               1.00    1.00  Unknown role or department, and a role that does not belong to the department
+B-P04     rules               1.00    1.00  Missing or inactive manager, and a start date in the past
+B-P05     rules               1.00    1.00  A person who already has an account, and a disabled account that still holds a username
+B-P06     rules               1.00    1.00  Segregation of duties and deduplicated packages and trainings
+B-P07     rules               1.00    1.00  Intro meeting slots around weekends, public holidays and a full calendar
+B-P08     combined            1.00    1.00  Several reasons at once, outcome precedence and skipped checks
+B-P09     variations          1.00    1.00  Documented input variations (dates, names, codes, e-mail, CNP)
+B-P10     robustness          1.00    1.00  Transient faults are retried without duplicates
+B-P11     robustness          1.00    1.00  A step that keeps failing makes the onboarding PARTIAL
+B-P12     robustness          1.00    1.00  Resume a PARTIAL onboarding, leave finished requests alone, finish after a restart

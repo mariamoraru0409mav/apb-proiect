@@ -1,0 +1,1463 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "B: Employee onboarding",
+    "version": "1.1.0",
+    "description": "API-ul proiectului B, exportat din `GET {BASE_URL}/openapi.json` al unei rulări publice. Căile sunt relative la BASE_URL-ul rulării, care se schimbă la fiecare rulare: puneți în variabila `token` partea de după /r/ din base_url (sau base_url întreg ca adresă de bază a conectorului). Fără autentificare; fiecare POST are o cheie de idempotență în antetul `Idempotency-Key`. Regulile, cheile și codurile de eroare: documentele „01 Ghid student” și „Proiect B” din pachetul cursului."
+  },
+  "paths": {
+    "/requests": {
+      "get": {
+        "tags": [
+          "requests"
+        ],
+        "summary": "List Requests",
+        "description": "Every onboarding request of the run, in canonical order (received_at, then request_id).",
+        "operationId": "list_requests_requests_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response List Requests Requests Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/requests/{request_id}": {
+      "get": {
+        "tags": [
+          "requests"
+        ],
+        "summary": "Get Request",
+        "description": "The request document, exactly as submitted (see the SPEC's variations appendix).",
+        "operationId": "get_request_requests__request_id__get",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Request Requests  Request Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roles": {
+      "get": {
+        "tags": [
+          "reference"
+        ],
+        "summary": "List Roles",
+        "operationId": "list_roles_roles_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response List Roles Roles Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/departments": {
+      "get": {
+        "tags": [
+          "reference"
+        ],
+        "summary": "List Departments",
+        "operationId": "list_departments_departments_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response List Departments Departments Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/access-packages": {
+      "get": {
+        "tags": [
+          "reference"
+        ],
+        "summary": "List Packages",
+        "operationId": "list_packages_access_packages_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response List Packages Access Packages Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trainings": {
+      "get": {
+        "tags": [
+          "reference"
+        ],
+        "summary": "List Trainings",
+        "operationId": "list_trainings_trainings_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response List Trainings Trainings Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/holidays": {
+      "get": {
+        "tags": [
+          "reference"
+        ],
+        "summary": "List Holidays",
+        "description": "Romanian public holidays of the business date's year and of the years before and after it.",
+        "operationId": "list_holidays_holidays_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response List Holidays Holidays Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/employees": {
+      "get": {
+        "tags": [
+          "reference"
+        ],
+        "summary": "List Employees",
+        "operationId": "list_employees_employees_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Status",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response List Employees Employees Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/employees/{employee_id}": {
+      "get": {
+        "tags": [
+          "reference"
+        ],
+        "summary": "Get Employee",
+        "operationId": "get_employee_employees__employee_id__get",
+        "parameters": [
+          {
+            "name": "employee_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Employee Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Employee Employees  Employee Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/directory/accounts": {
+      "get": {
+        "tags": [
+          "directory"
+        ],
+        "summary": "List Accounts",
+        "description": "Directory accounts, oldest first; every given filter must match (exact values).",
+        "operationId": "list_accounts_directory_accounts_get",
+        "parameters": [
+          {
+            "name": "cnp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Cnp",
+              "nullable": true
+            }
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Username",
+              "nullable": true
+            }
+          },
+          {
+            "name": "request_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Request Id",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response List Accounts Directory Accounts Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "directory"
+        ],
+        "summary": "Create Account",
+        "operationId": "create_account_directory_accounts_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/access/grants": {
+      "get": {
+        "tags": [
+          "access"
+        ],
+        "summary": "List Grants",
+        "operationId": "list_grants_access_grants_get",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Username",
+              "nullable": true
+            }
+          },
+          {
+            "name": "request_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Request Id",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response List Grants Access Grants Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "access"
+        ],
+        "summary": "Create Grant",
+        "operationId": "create_grant_access_grants_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lms/enrollments": {
+      "get": {
+        "tags": [
+          "lms"
+        ],
+        "summary": "List Enrollments",
+        "operationId": "list_enrollments_lms_enrollments_get",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Username",
+              "nullable": true
+            }
+          },
+          {
+            "name": "request_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Request Id",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response List Enrollments Lms Enrollments Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "lms"
+        ],
+        "summary": "Create Enrollment",
+        "operationId": "create_enrollment_lms_enrollments_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnrollmentIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calendar/busy": {
+      "get": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Get Busy",
+        "description": "Busy intervals of an employee that overlap the days `from`..`to` (inclusive), local time.",
+        "operationId": "get_busy_calendar_busy_get",
+        "parameters": [
+          {
+            "name": "employee_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Employee Id"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "From"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "title": "Response Get Busy Calendar Busy Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calendar/meetings": {
+      "get": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "List Meetings",
+        "operationId": "list_meetings_calendar_meetings_get",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Request Id",
+              "nullable": true
+            }
+          },
+          {
+            "name": "manager_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Manager Id",
+              "nullable": true
+            }
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Username",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response List Meetings Calendar Meetings Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Create Meeting",
+        "operationId": "create_meeting_calendar_meetings_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MeetingIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/history": {
+      "get": {
+        "tags": [
+          "onboarding"
+        ],
+        "summary": "Get History",
+        "description": "Onboarding records, oldest first: earlier runs (`source` EARLIER_RUN), then the ones recorded in this\nrun (`source` THIS_RUN, also those of an earlier start of the solution before a restart).",
+        "operationId": "get_history_history_get",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Request Id",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Get History History Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onboarding-records": {
+      "post": {
+        "tags": [
+          "onboarding"
+        ],
+        "summary": "Create Record",
+        "operationId": "create_record_onboarding_records_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "tags": [
+          "onboarding"
+        ],
+        "summary": "List Notifications",
+        "operationId": "list_notifications_notifications_get",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Request Id",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response List Notifications Notifications Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "onboarding"
+        ],
+        "summary": "Create Notification",
+        "operationId": "create_notification_notifications_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/context": {
+      "get": {
+        "tags": [
+          "common"
+        ],
+        "summary": "Get Context",
+        "operationId": "get_context_context_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Context Context Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/config": {
+      "get": {
+        "tags": [
+          "common"
+        ],
+        "summary": "Get Config",
+        "operationId": "get_config_config_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Config Config Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/report": {
+      "post": {
+        "tags": [
+          "common"
+        ],
+        "summary": "Post Report",
+        "description": "The solution's standardized results; the latest accepted one is `state[\"report\"]`.",
+        "operationId": "post_report_report_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "items": {
+                    "items": {
+                      "$ref": "#/components/schemas/Report_ReportItem"
+                    },
+                    "type": "array",
+                    "title": "Items"
+                  },
+                  "idempotency_key": {
+                    "type": "string",
+                    "title": "Idempotency Key",
+                    "nullable": true
+                  }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "items"
+                ],
+                "title": "Report",
+                "description": "`POST /report` body (SPEC section 9)."
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AccountIn": {
+        "properties": {
+          "idempotency_key": {
+            "type": "string",
+            "title": "Idempotency Key",
+            "nullable": true
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "username": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z]+(-[a-z]+)*\\.[a-z]+(-[a-z]+)*[0-9]*$",
+            "title": "Username"
+          },
+          "first_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "First Name"
+          },
+          "last_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Last Name"
+          },
+          "cnp": {
+            "type": "string",
+            "pattern": "^[0-9]{13}$",
+            "title": "Cnp"
+          },
+          "role_code": {
+            "type": "string",
+            "title": "Role Code"
+          },
+          "department_code": {
+            "type": "string",
+            "title": "Department Code"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "username",
+          "first_name",
+          "last_name",
+          "cnp",
+          "role_code",
+          "department_code",
+          "start_date"
+        ],
+        "title": "AccountIn"
+      },
+      "EnrollmentIn": {
+        "properties": {
+          "idempotency_key": {
+            "type": "string",
+            "title": "Idempotency Key",
+            "nullable": true
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "training_code": {
+            "type": "string",
+            "title": "Training Code"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Due Date"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "username",
+          "training_code",
+          "due_date"
+        ],
+        "title": "EnrollmentIn"
+      },
+      "GrantIn": {
+        "properties": {
+          "idempotency_key": {
+            "type": "string",
+            "title": "Idempotency Key",
+            "nullable": true
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "package_code": {
+            "type": "string",
+            "title": "Package Code"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "username",
+          "package_code"
+        ],
+        "title": "GrantIn"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "MeetingIn": {
+        "properties": {
+          "idempotency_key": {
+            "type": "string",
+            "title": "Idempotency Key",
+            "nullable": true
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "manager_id": {
+            "type": "string",
+            "title": "Manager Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "start": {
+            "type": "string",
+            "title": "Start",
+            "description": "ISO 8601 timestamp with offset, e.g. 2026-11-23T09:00:00+02:00"
+          },
+          "end": {
+            "type": "string",
+            "title": "End",
+            "description": "ISO 8601 timestamp with offset"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "manager_id",
+          "username",
+          "start",
+          "end"
+        ],
+        "title": "MeetingIn"
+      },
+      "NotificationIn": {
+        "properties": {
+          "idempotency_key": {
+            "type": "string",
+            "title": "Idempotency Key",
+            "nullable": true
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "recipient_role": {
+            "type": "string",
+            "enum": [
+              "MANAGER",
+              "IT",
+              "EMPLOYEE",
+              "HR",
+              "IT_OPS"
+            ],
+            "title": "Recipient Role"
+          },
+          "template": {
+            "type": "string",
+            "enum": [
+              "onboarding_completed",
+              "it_setup",
+              "welcome",
+              "onboarding_partial",
+              "meeting_not_scheduled",
+              "manual_review",
+              "request_rejected"
+            ],
+            "title": "Template"
+          },
+          "recipient": {
+            "type": "string",
+            "maxLength": 200,
+            "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+            "title": "Recipient"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Message",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "recipient_role",
+          "template",
+          "recipient"
+        ],
+        "title": "NotificationIn"
+      },
+      "RecordIn": {
+        "properties": {
+          "idempotency_key": {
+            "type": "string",
+            "title": "Idempotency Key",
+            "nullable": true
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "COMPLETED",
+              "PARTIAL",
+              "MANUAL_REVIEW",
+              "REJECTED"
+            ],
+            "title": "Outcome"
+          },
+          "reason_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Reason Codes"
+          },
+          "steps": {
+            "$ref": "#/components/schemas/StepsIn"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "outcome",
+          "steps"
+        ],
+        "title": "RecordIn"
+      },
+      "StepsIn": {
+        "properties": {
+          "account": {
+            "type": "string",
+            "enum": [
+              "DONE",
+              "FAILED",
+              "SKIPPED"
+            ],
+            "title": "Account"
+          },
+          "access": {
+            "type": "string",
+            "enum": [
+              "DONE",
+              "FAILED",
+              "SKIPPED"
+            ],
+            "title": "Access"
+          },
+          "training": {
+            "type": "string",
+            "enum": [
+              "DONE",
+              "FAILED",
+              "SKIPPED"
+            ],
+            "title": "Training"
+          },
+          "meeting": {
+            "type": "string",
+            "enum": [
+              "DONE",
+              "FAILED",
+              "SKIPPED",
+              "NO_SLOT"
+            ],
+            "title": "Meeting"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "account",
+          "access",
+          "training",
+          "meeting"
+        ],
+        "title": "StepsIn"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "Report_ReportItem": {
+        "additionalProperties": false,
+        "properties": {
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "COMPLETED",
+              "PARTIAL",
+              "MANUAL_REVIEW",
+              "REJECTED"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "reason_codes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reason Codes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "request_id",
+          "outcome"
+        ],
+        "title": "ReportItem",
+        "type": "object"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://apb.majordom.tech/r/{token}",
+      "description": "The BASE_URL of one run; `token` is the part after /r/ in the run's base_url.",
+      "variables": {
+        "token": {
+          "default": "RUN_TOKEN",
+          "description": "The token of your run (it changes with every run)."
+        }
+      }
+    }
+  ]
+}
