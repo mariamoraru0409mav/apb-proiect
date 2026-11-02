@@ -64,4 +64,4 @@ Dupa ultima cerere, raportul contine rezultatele finale pentru toate cererile, i
 
 ## Rulare
 
-Este necesar Python 3.10 sau mai nou pentru runner. Solutia nu necesita pachete instalate, dar runtime-ul trebuie sa aiba datele de fus orar pentru `Europe/Bucharest` disponibile pentru `zoneinfo`. Cheia `BPA_KEY` se configureaza in mediul runner-ului si nu se salveaza in cod, in log sau in repository.
+Este necesar Python 3.10 sau mai nou pentru runner. Codul foloseste biblioteca standard, iar `requirements.txt` instaleaza `tzdata` pentru ca `zoneinfo` sa poata rezolva `Europe/Bucharest` si in imagini minimale. Cheia `BPA_KEY` se configureaza in mediul runner-ului si nu se salveaza in cod, in log sau in repository.
