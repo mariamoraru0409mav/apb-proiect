@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import calendar
 import os
 import re
 import socket
@@ -156,7 +157,7 @@ def normalize_name(value: str) -> str:
     return " ".join("-".join(part.capitalize() for part in word.split("-")) for word in value.split(" "))
 
 
-def normalize_document(document: Any) -> tuple[dict[str, Any], bool]:
+def normalize_document(document: Any, transfers_enabled: bool = False) -> tuple[dict[str, Any], bool]:
     required = (
         "request_type", "first_name", "last_name", "cnp", "personal_email",
         "start_date", "role_code", "department_code",
@@ -169,7 +170,10 @@ def normalize_document(document: Any) -> tuple[dict[str, Any], bool]:
     normalized = dict(document)
     for field in required:
         normalized[field] = document[field].strip()
-    if normalized["request_type"] != "NEW_HIRE":
+    allowed_types = {"NEW_HIRE"}
+    if transfers_enabled:
+        allowed_types.add("TRANSFER")
+    if normalized["request_type"] not in allowed_types:
         return normalized, False
 
     start_date = parse_start_date(normalized["start_date"])
@@ -247,6 +251,25 @@ def add_workdays(start: date, count: int, holidays: set[date]) -> date:
     return current
 
 
+def subtract_months(value: date, months: int) -> date:
+    month_index = value.year * 12 + value.month - 1 - months
+    year, month_index = divmod(month_index, 12)
+    month = month_index + 1
+    return date(year, month, min(value.day, calendar.monthrange(year, month)[1]))
+
+
+def completed_on_or_after(enrollment: dict[str, Any], deadline: date) -> bool:
+    if str(enrollment.get("status", "")).upper() != "COMPLETED":
+        return False
+    completed_on = enrollment.get("completed_on")
+    if not isinstance(completed_on, str):
+        return False
+    try:
+        return date.fromisoformat(completed_on[:10]) >= deadline
+    except ValueError:
+        return False
+
+
 def username_base(first_name: str, last_name: str) -> str:
     first = re.split(r"[ -]", first_name, maxsplit=1)[0].translate(TRANSLITERATION).lower()
     last = re.sub(r"\s+", "-", last_name).translate(TRANSLITERATION).lower()
@@ -276,6 +299,7 @@ class Onboarding:
         self.hub = hub
         self.context = hub.get("/context")
         self.config = hub.get("/config")
+        self.transfers_enabled = self.config.get("features", {}).get("transfers") is True
         self.roles = index_records(hub.get("/roles"), "role_code", "code")
         self.departments = index_records(hub.get("/departments"), "department_code", "code")
         self.packages = index_records(hub.get("/access-packages"), "package_code", "code")
@@ -284,6 +308,7 @@ class Onboarding:
         self.employees = index_records(employees, "employee_id", "id", "manager_id")
         self.holidays = {day for item in hub.get("/holidays") if (day := date_value(item)) is not None}
         self.accounts = hub.get("/directory/accounts")
+        self.transfer_accounts: dict[str, dict[str, Any]] = {}
         self.business_date = date.fromisoformat(self.context["business_date"])
         self.results: dict[str, dict[str, Any]] = {}
 
@@ -334,7 +359,13 @@ class Onboarding:
         elif str(manager.get("status", "")).upper() != "ACTIVE":
             add_reason(codes, "MANAGER_INACTIVE")
 
-        if cnp_ok:
+        if cnp_ok and document["request_type"] == "TRANSFER":
+            accounts = self.hub.get("/directory/accounts", {"cnp": document["cnp"]})
+            if accounts:
+                self.transfer_accounts[document["cnp"]] = accounts[0]
+            else:
+                add_reason(codes, "NO_EXISTING_ACCOUNT")
+        elif cnp_ok:
             duplicate = any(
                 account.get("cnp") == document["cnp"] and account.get("request_id") != request_id
                 for account in self.accounts
@@ -363,7 +394,7 @@ class Onboarding:
         }
         manual = {
             "MINOR_EMPLOYEE", "ROLE_NOT_IN_DEPARTMENT", "MANAGER_MISSING",
-            "MANAGER_INACTIVE", "ALREADY_EMPLOYED", "SOD_CONFLICT",
+            "MANAGER_INACTIVE", "ALREADY_EMPLOYED", "NO_EXISTING_ACCOUNT", "SOD_CONFLICT",
         }
         if any(code in rejected for code in codes):
             return "REJECTED"
@@ -391,6 +422,15 @@ class Onboarding:
         return None
 
     def account_step(self, request_id: str, document: dict[str, Any]) -> tuple[str, str | None]:
+        if document["request_type"] == "TRANSFER":
+            account = self.transfer_accounts.get(document["cnp"])
+            if account is None:
+                accounts = self.hub.get("/directory/accounts", {"cnp": document["cnp"]})
+                account = accounts[0] if accounts else None
+            if account is None:
+                return "FAILED", None
+            return "DONE", str(account.get("username", ""))
+
         existing = next(
             (
                 account for account in self.accounts
@@ -448,12 +488,38 @@ class Onboarding:
     def access_step(self, request_id: str, document: dict[str, Any], username: str) -> str:
         role = self.roles[document["role_code"]]
         department = self.departments[document["department_code"]]
-        package_codes = sorted(set(role.get("base_packages", [])) | set(department.get("addon_packages", [])))
-        existing = self.hub.get("/access/grants", {"request_id": request_id})
-        granted = {item.get("package_code") for item in existing}
-        for package_code in package_codes:
-            if package_code in granted:
-                continue
+        target = set(role.get("base_packages", [])) | set(department.get("addon_packages", []))
+
+        if document["request_type"] == "TRANSFER":
+            grants = self.hub.get("/access/grants", {"username": username})
+            active = {
+                item.get("package_code")
+                for item in grants
+                if str(item.get("status", item.get("state", ""))).upper() == "ACTIVE"
+            }
+            for package_code in sorted(active - target):
+                body = {"request_id": request_id, "username": username, "package_code": package_code}
+                if not self.write_repeated(
+                    "/access/revocations",
+                    body,
+                    f"{request_id}:revoke:{package_code}",
+                    lambda: any(
+                        item.get("package_code") == package_code
+                        and str(item.get("status", item.get("state", ""))).upper() == "REVOKED"
+                        for item in self.hub.get("/access/grants", {"username": username})
+                    ),
+                ):
+                    return "FAILED"
+                active.remove(package_code)
+        else:
+            grants = self.hub.get("/access/grants", {"request_id": request_id})
+            active = {
+                item.get("package_code")
+                for item in grants
+                if str(item.get("status", item.get("state", "ACTIVE"))).upper() == "ACTIVE"
+            }
+
+        for package_code in sorted(target - active):
             body = {"request_id": request_id, "username": username, "package_code": package_code}
             if not self.write_repeated(
                 "/access/grants",
@@ -461,7 +527,11 @@ class Onboarding:
                 f"{request_id}:grant:{package_code}",
                 lambda: any(
                     item.get("package_code") == package_code
-                    for item in self.hub.get("/access/grants", {"request_id": request_id})
+                    and str(item.get("status", item.get("state", "ACTIVE"))).upper() == "ACTIVE"
+                    for item in self.hub.get(
+                        "/access/grants",
+                        {"username": username} if document["request_type"] == "TRANSFER" else {"request_id": request_id},
+                    )
                 ),
             ):
                 return "FAILED"
@@ -475,8 +545,18 @@ class Onboarding:
         existing = self.hub.get("/lms/enrollments", {"request_id": request_id})
         enrolled = {item.get("training_code") for item in existing}
         start_date = date.fromisoformat(document["start_date"])
+        recent_completed = set()
+        if document["request_type"] == "TRANSFER":
+            months = int(self.config.get("transfer", {}).get("training_recency_months", 0))
+            deadline = subtract_months(start_date, months)
+            history = self.hub.get("/lms/enrollments", {"username": username})
+            recent_completed = {
+                item.get("training_code")
+                for item in history
+                if completed_on_or_after(item, deadline)
+            }
         for training_code in sorted(required):
-            if training_code in enrolled:
+            if training_code in enrolled or training_code in recent_completed:
                 continue
             training = self.trainings.get(training_code, {})
             due_date = add_workdays(start_date, int(training.get("days_to_complete", 0)), self.holidays)
@@ -638,7 +718,9 @@ class Onboarding:
         history = self.hub.get("/history", {"request_id": request_id})
         latest = history[-1] if history else None
         if latest and latest.get("source") == "THIS_RUN":
-            document, _ = normalize_document(self.hub.get(f"/requests/{urllib.parse.quote(request_id, safe='')}"))
+            document, _ = normalize_document(
+                self.hub.get(f"/requests/{urllib.parse.quote(request_id, safe='')}"), self.transfers_enabled
+            )
             notifications = self.hub.get("/notifications", {"request_id": request_id})
             outcome = latest["outcome"]
             codes = list(latest.get("reason_codes", []))
@@ -659,7 +741,7 @@ class Onboarding:
             return
 
         raw_document = self.hub.get(f"/requests/{urllib.parse.quote(request_id, safe='')}")
-        document, valid = normalize_document(raw_document)
+        document, valid = normalize_document(raw_document, self.transfers_enabled)
         codes, manager = self.validation_codes(document, valid, request_id)
         outcome = self.outcome_for_validation(codes)
         if outcome:
