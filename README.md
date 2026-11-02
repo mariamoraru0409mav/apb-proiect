@@ -30,6 +30,6 @@ Pentru a rula un set ales de scenarii, adauga, de exemplu, `--scenarios B-P01,B-
 
 ```text
 image: python:3.12-slim
-setup:
+setup: pip install -r requirements.txt
 command: python solutie.py {base_url}
 ```
