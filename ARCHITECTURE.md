@@ -17,16 +17,22 @@ bpa_runner.py -> solutie.py -> BPA hub
 ## Componente si reguli
 
 - `Hub` centralizeaza GET/POST, codificarea JSON, timeout-urile, tratarea erorilor si politica de retry. Nu contine reguli de business.
-- `normalize_document`, `parse_start_date` si `normalize_name` aplica B-R01 si normalizarile N1-N6: campuri obligatorii, tipuri, date ISO sau `DD.MM.YYYY`, e-mail, coduri si nume normalizate.
+- `normalize_document`, `parse_start_date` si `normalize_name` aplica B-R01 si normalizarile N1-N6: campuri obligatorii, tipuri, date ISO sau `DD.MM.YYYY`, e-mail, coduri si nume normalizate. `TRANSFER` este acceptat numai cand `features.transfers` este `true`; in rest, tipul este invalid.
 - `valid_cnp` verifica structura, seria, judetul, numarul serial, data nasterii si cifra de control pentru B-R02. `age_at_start` calculeaza varsta implinita si trateaza aniversarea din 29 februarie pentru B-R03.
-- `validation_codes` aplica B-R04-B-R09: existenta rolului/departamentului, data de inceput fata de `business_date`, departamentele permise, managerul activ, CNP deja prezent in Directory si conflictele dintre pachete. `outcome_for_validation` aplica precedenta `REJECTED > MANUAL_REVIEW`; o cerere respinsa la validare nu produce scrieri de configurare.
-- `account_step` implementeaza B-R10: refoloseste contul aceluiasi `request_id`, construieste username-ul transliterat si adauga sufix numeric daca acesta este deja folosit.
-- `access_step` acorda pachetele rolului si departamentului in ordine, sarind peste granturile deja existente. `training_step` combina instruirile obligatorii cu cele ale rolului si calculeaza termenele in zile lucratoare, fara sarbatorile citite din hub (B-R11).
+- `validation_codes` aplica B-R04-B-R09: existenta rolului/departamentului, data de inceput fata de `business_date`, departamentele permise, managerul activ si conflictele dintre pachete. Pentru `NEW_HIRE`, un CNP deja folosit produce `ALREADY_EMPLOYED`; pentru `TRANSFER`, B-R08 cere un cont existent si produce `NO_EXISTING_ACCOUNT` daca nu gaseste unul. `outcome_for_validation` aplica precedenta `REJECTED > MANUAL_REVIEW`; o cerere respinsa la validare nu produce scrieri de configurare.
+- `account_step` implementeaza B-R10: la `TRANSFER` reutilizeaza primul cont gasit dupa CNP si nu creeaza alt cont. La `NEW_HIRE` reutilizeaza contul aceluiasi `request_id`, construieste username-ul transliterat si adauga sufix numeric daca acesta este deja folosit.
+- `access_step` acorda pachetele rolului si departamentului in ordine, sarind peste granturile active existente. La `TRANSFER`, citeste granturile contului, revoca intai pachetele active din afara setului tinta, apoi acorda pachetele tinta inactive; un conflict SoD este decis la validare, inaintea oricarei modificari de acces. `training_step` combina instruirile obligatorii cu cele ale rolului si calculeaza termenele in zile lucratoare, fara sarbatorile citite din hub (B-R11). Pentru transfer, instruirile deja completate la sau dupa limita `start_date` minus `training_recency_months` luni calendaristice nu se repeta; configurarile vechi sau neterminate nu impiedica reinscrierea.
 - `meeting_days` si `meeting_step` implementeaza B-R12: cauta zilele lucratoare din fereastra configurata, citeste ocuparea managerului, parcurge sloturile in ordine si foloseste fusul orar configurat. Interogarea ocupabilitatii este impartita in intervale de cel mult 62 de zile, limita endpoint-ului.
 - `finish_record` si `send_notifications` aplica rezultatele B-R13 si regulile de notificare. La esec definitiv al crearii contului, pasii urmatori sunt `SKIPPED`; la esecul altui pas, restul pasilor continua. Un rezultat `NO_SLOT` adauga codul `MEETING_NOT_SCHEDULED`. Notificarile nu includ CNP si sunt trimise numai dupa inregistrare.
 - `process` aplica B-R14 pentru porniri repetate. `report` construieste cate un element pentru fiecare cerere, cu rezultatul si codurile finale.
 
 Valorile de business (data, praguri de varsta, program, durata, pasul si fereastra intalnirilor, destinatarii) provin din `GET /context` si `GET /config`; catalogul, managerii si sarbatorile provin din endpoint-urile de referinta. Solutia ignora campurile necunoscute si trimite corpurile POST cu numai campurile definite de API.
+
+## Extensia CR-1: Transferuri interne
+
+Extensia este activata numai de `features.transfers`. Un transfer pastreaza validarea comuna si programarea intalnirii, dar reutilizeaza contul existent. Pentru acces, starea relevanta este cea a granturilor `ACTIVE` citite dupa username; granturile `REVOKED` nu sunt considerate active. Revocarile folosesc `POST /access/revocations` si cheia `{request_id}:revoke:{package_code}`. Dupa o repornire, reconcilierea porneste din nou de la granturile active curente.
+
+Pentru instruiri, `training_recency_months` se citeste din `GET /config.transfer`. Data limita scade luni calendaristice din data de inceput si limiteaza ziua la ultima zi a lunii rezultate. Numai instruirile `COMPLETED` cu `completed_on` la sau dupa aceasta limita sunt pastrate fara reinscriere; inscrierile vechi sau nefinalizate se refac pentru transferul curent.
 
 ## Retry si idempotenta
 
@@ -34,15 +40,15 @@ Valorile de business (data, praguri de varsta, program, durata, pasul si fereast
 
 Fiecare POST de business foloseste aceeasi cheie determinista la fiecare retry:
 
-| Scriere | Cheie |
-| --- | --- |
-| Cont | `{request_id}:account` |
-| Grant | `{request_id}:grant:{package_code}` |
-| Inscriere | `{request_id}:training:{training_code}` |
-| Intalnire | `{request_id}:meeting` |
-| Inregistrare | `{request_id}:record` |
-| Notificare | `{request_id}:notify:{recipient_role}:{template}` |
-| Raport | `report`, apoi `report-2`, `report-3` etc. numai la `IDEMPOTENCY_KEY_REUSED` |
+| Scriere      | Cheie                                                                        |
+| ------------ | ---------------------------------------------------------------------------- |
+| Cont         | `{request_id}:account`                                                       |
+| Grant        | `{request_id}:grant:{package_code}`                                          |
+| Inscriere    | `{request_id}:training:{training_code}`                                      |
+| Intalnire    | `{request_id}:meeting`                                                       |
+| Inregistrare | `{request_id}:record`                                                        |
+| Notificare   | `{request_id}:notify:{recipient_role}:{template}`                            |
+| Raport       | `report`, apoi `report-2`, `report-3` etc. numai la `IDEMPOTENCY_KEY_REUSED` |
 
 Dupa un conflict de cheie, solutia reciteste starea relevanta din hub si continua numai daca scrierea este prezenta. Granturile, inscrierile si intalnirile existente se refolosesc; notificarea se compara dupa perechea `recipient_role`/`template`. Cheile si corpurile stabile previn dublurile in cazul in care hub-ul a inregistrat scrierea, dar raspunsul s-a pierdut.
 
