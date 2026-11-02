@@ -1,6 +1,6 @@
 # Proiect B: Integrarea angajatilor noi
 
-Automatizarea proceseaza cererile de onboarding din hub-ul BPA, configureaza sistemele Directory, Access, LMS si Calendar, inregistreaza rezultatul, trimite notificarile si publica raportul final.
+Automatizarea proceseaza cererile de onboarding si transfer intern din hub-ul BPA, configureaza sistemele Directory, Access, LMS si Calendar, inregistreaza rezultatul, trimite notificarile si publica raportul final. Transferurile sunt acceptate numai cand `features.transfers` este activ in configuratia hub-ului.
 
 ## Cerinte
 
